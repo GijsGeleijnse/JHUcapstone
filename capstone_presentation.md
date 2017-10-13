@@ -1,0 +1,70 @@
+
+
+Three automatic Crystal balls for you to enjoy
+========================================================
+author: G. Geleijnse
+date: October 2017
+autosize: true
+Online Text prediction using Data-driven Algorithms
+
+
+How it works
+========================================================
+
+- Texts are cleaned and normalized.
+- N-grams are extracted from randomly selected parts of the texts
+- First N-1 words, last word and the frequency are stored in a table
+- Tables are queried for matching N-1 words and most frequent ones are returned 
+- Back-off: if no or few matches, then shorter matching strings are included
+- For efficiency: we store only N-grams with frequency at least 2
+
+
+
+Evaluation
+========================================================
+
+<font .smaller>
+
+```r
+r <- read.csv2("eval_matrix.csv")
+r[1:6,1:7]
+```
+
+```
+  N.Gram sample Filter build.time size..Mb. eval.time correct
+1      2   0.02     no         69         5       0.5     2.7
+2      2     .2     no        531        18      2,00     2.7
+3      3     .2     no       1733       196     26,00     3.1
+4      3     .2    yes        755        17       1.9     5.2
+5      5     .2    yes       1693        38       7.2     5.3
+6      5     .2     no       5865      1032    254,00     3.2
+```
+</font>
+Performance for various setting is automatically evaluated on test corpus. 5-gram with filtering gives best performance at low memory usage.
+
+
+
+Functionality - a range of options!
+========================================================
+
+- A text entry solution with a Submit button! After pressing the button, the user will be delighted with a prediction
+of the next word.
+- An interactive text entry application. Three buttons will be dynamically updated based on the text input. Pressing the buttons allows to enter the word into the text field.
+- A presidential service: a text prediction application based on the Trump Tweet Archive. This service may save the president
+some valuable time when writing the next tweet!
+
+
+Finally
+========================================================
+
+Please visit out application here:
+
+https://guineapig.shinyapps.io/crystal_ball/
+
+All code and data sets may be found here:
+
+https://github.com/GijsGeleijnse/Capstone
+
+
+We hope we may inspire you!
+

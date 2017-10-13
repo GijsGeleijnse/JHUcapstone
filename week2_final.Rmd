@@ -1,0 +1,305 @@
+## Week 2 Report for JHU Coursera Capstone Project
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+In this report, we will present some basic analysis of the corpora involved in the Coursera JHU Capstone Project in Data Science. The goal of this brief document is to provide basic statistics on the data sets, as a proof of having explored the data. Also, I will share my first simplistic prediction algorithm and a brief discussion of the plan for the next phases of this course.
+
+
+# Exploring the data
+
+In this exploration, we will use  the tidy text package to tokenize the texts and analyze word and n-gram frequencies. As comparison, we will use the weka and tm packages and compare computation time. I got inspired by the fun work of Julia Silge, who created R packages on Jane Austen novels https://juliasilge.com/blog/gender-pronouns/ . Analyzing these novels in R may be a bit less romantic than reading them, but you might want to try for yourself.
+
+We will load samples from the three English files. For comparison, we will also load the full Twitter file. The three files will be split into a training and a test file. The latter will be used for automatic validation of different incarnations of our algorithms.
+
+
+```{r, message=FALSE, include=FALSE, cache=FALSE}
+library(dplyr)
+library(pryr)
+
+
+getFileP <- function(n = NULL,p = 1, filename) {
+
+con <- file(filename, "r") 
+if(!is.null(n))
+{t <- readLines(con, n)} ## Read in the next 5 lines of text 
+else
+  {t <- readLines(con)}
+close(con) ## 
+w <- which(rbinom(length(t),1,p)%in% 1 )
+t[w]}
+
+SplitTrainTestP <- function(p, l) {
+
+w <- which(rbinom(l,1,p)%in% 1 )
+return(w)
+}
+
+blog_sample <- getFileP(NULL,0.1,"C:/Users/GGe1706.17794/Documents/GitHub/Capstone/final/en_US/en_US.blogs.txt")
+w <- SplitTrainTestP(0.1,length(blog_sample))
+blog_test <- blog_sample[w]
+blog_sample <- blog_sample[-w]
+
+news_sample <- getFileP(NULL,0.1,"C:/Users/GGe1706.17794/Documents/GitHub/Capstone/final/en_US/en_US.news.txt")
+w <- SplitTrainTestP(0.1,length(news_sample))
+news_test <- news_sample[w]
+news_sample <- news_sample[-w]
+
+twit_sample <- getFileP(NULL,0.2,"C:/Users/GGe1706.17794/Documents/GitHub/Capstone/final/en_US/en_US.twitter.txt")
+w <- SplitTrainTestP(0.1,length(twit_sample))
+twit_test <- twit_sample[w]
+twit_sample <- twit_sample[-w]
+
+
+twit_full <- getFileP(NULL,1,"C:/Users/GGe1706.17794/Documents/GitHub/Capstone/final/en_US/en_US.twitter.txt")
+
+sample <- paste(twit_sample,blog_sample)
+sample <- paste(news_sample,sample)
+
+```
+
+
+```{r}
+library(tidytext)
+## function to create dataframe with n-grams and their counts - using the tidytext package
+getNGrams <- function(t, n){
+    text <- as.data.frame(t)
+  number <- c(1:length(t))
+  number <- as.factor(number)
+  df <- data.frame(text,number)
+df$t <- as.character(df$t)
+df_grams <- df %>%
+  unnest_tokens(ngram, t, token = "ngrams", n = n) %>%
+  count(number, ngram, sort = TRUE) %>%
+  ungroup()
+  
+ 
+total_df_grams <- df_grams %>% group_by(ngram) %>% summarize(total = sum(n))
+
+total_df_grams <- arrange(total_df_grams,desc(total))  
+total_df_grams
+}
+
+
+twit_sample_words <- getNGrams(twit_sample,1)
+twit_sample_words <- dplyr::arrange(twit_sample_words,desc(total))
+blog_sample_words <- getNGrams(blog_sample,1)
+blog_sample_words <- dplyr::arrange(blog_sample_words,desc(total))
+news_sample_words <- getNGrams(news_sample,1)
+news_sample_words <- dplyr::arrange(news_sample_words,desc(total))
+twit_full_words <- getNGrams(twit_full,1)
+twit_full_words <- dplyr::arrange(twit_full_words,desc(total))
+
+
+plot(twit_sample_words$total,  ylab= "word count")
+
+```
+
+We see from this example plot that the corpora contain a collection of words that are very frequent, with a long tail of rare words. In the twitter corpus for example, 40% of the words occurs only once. On the other hand, a vocabulary of only 1000 words is enough for 75% percent of the word occurrences.
+Below, we plot a table with the 20 most frequent words in the three sample corpora. We like short words, don't we?
+
+```{r}
+freq_words <- data.frame(twitter = twit_sample_words[1:20,]$ngram, news = news_sample_words[1:20,]$ngram, blogs = blog_sample_words[1:20,]$ngram)
+
+head(freq_words,n=20)
+
+```
+
+We continue this analysis we a plot showing how many words we need to cover the complete texts in the corpora.
+
+
+```{r}
+
+percentage_all <- function(df,n){
+  sum <- sum(df$total)
+  sum_n <- sum(df[1:n,]$total)
+  return(sum_n / sum)  
+}
+
+percentage_all <- function(n){
+  sum <- sum(twit_full_words$total)
+  sum_n <- sum(twit_full_words[1:n,]$total)
+  return(sum_n / sum)  
+}
+
+# super inefficient away to calculate the cumulative percentage of the total amount of words in the corpus.
+pc <-NULL
+m <- 15000
+for(n in 1:m){pc <- c(pc,percentage_all(n))}
+pc <- c(pc,rep(NA,nrow(twit_full_words)-m))
+twit_full_words$pc <- pc
+tw <- filter(twit_full_words, !is.na(pc))
+tw$n <- c(1:nrow(tw))
+plot(tw$n,tw$pc, xlab ="n most frequent words", ylab = "percentage of full corpus")
+
+```
+
+In our example, we randomly selected 10% of the lines of the corpus (and removed another 10% of this subcorpus for evaluating setting of the algorithms). For the twitter corpus, we also loaded the full corpus. We are interested if the order of the found word frequencies are equal. We therefore iteratively compute the overlap between the lists of the n most frequent words. We compute the size of the intersection of words of the two sets.
+
+
+```{r}
+
+intersectionTwitter <- function(n)
+{
+  full <- twit_full_words[1:n,]
+  sample <- twit_sample_words[1:n,]
+  r <- min(nrow(filter(full,ngram %in% sample$ngram)), nrow(filter(sample,ngram %in% full$ngram)))
+  return(r/n)
+  
+}
+
+
+ic <-NULL
+
+m <- 10000
+
+for(n in 1:m){ic <- c(ic,intersectionTwitter(n))}
+n <- c(1:m)
+df <- data.frame(n,ic)
+plot(df$n,df$ic, xlab ="n most frequent words in sample and full corpus", ylab = "intersection")
+
+
+```
+
+
+
+The figure above shows that the overlap between the two ordered lists is huge. Indeed, this analysis suggests that we may build our algorithms on a sample of the corpus rather than on the full dataset.
+
+
+## Measuring computation time and space 
+
+When N-grams get larger, the computation time and the space of the stored objects will increase. We can measure the processing time as well as the object size using the following simple functions below. Below, we will investigate the object size of the 4-gram when storing all 4-grams versus only those which occur more than once in the sample corpus.
+
+```{r}
+
+ptmTidy <- proc.time()
+fourgramTidy <- getNGrams(twit_sample,4)
+ptmTidy <- proc.time() - ptmTidy
+sizeTidy <- object_size(fourgramTidy)
+print(sizeTidy)
+print(ptmTidy)
+print(object_size(filter(fourgramTidy,total>1)))
+
+
+```
+
+As we are impatient people, we like to control our waiting time - for example based on the length of our lunch break or the performance of our local coffee machine. Therefore, we adjust the function to read N-grams from a file by adding a parameting specifying the time limit that we like the algorithm to spend on N-gram indexing.
+
+
+```{r}
+
+# we allow to set a time limit to compute. If we set our period of boredom, we will work with the n-gram model as computed
+getNGramsTimeLimit <- function(t, n,tlim, chunk=100){
+  ptm <- proc.time()
+  telaps <- proc.time()- ptm
+      text <- as.data.frame(t)
+  number <- c(1:length(t))
+  number <- as.factor(number)
+  df <- data.frame(text,number)
+df$t <- as.character(df$t)
+df_grams <- NULL
+  
+  step <- nrow(df) %/% chunk
+  indexB <- 0
+  indexE <- step 
+  i <-0
+  while(telaps[3] < tlim & i < chunk){
+    df2 <- df[indexB:indexE,]
+    df_grams <- rbind(df_grams,df2 %>%
+  unnest_tokens(ngram, t, token = "ngrams", n = n) %>%
+  count(number, ngram, sort = TRUE) %>%
+  ungroup())
+    
+    indexB <- indexE + 1
+    indexE <- indexB + step
+    i <- i + 1
+    telaps <- proc.time() - ptm
+  }
+  
+ 
+total_df_grams <- df_grams %>% group_by(ngram) %>% summarize(total = sum(n))
+
+total_df_grams <- arrange(total_df_grams,desc(total))  
+total_df_grams
+}
+
+
+
+```
+
+
+
+
+
+## From Words analysis to a simple Bi-gram model
+
+
+The basic idea is to use N-gram distributions to predict the next word when given a sequence. A balance should be make between computation time and memory size. 
+
+The simplest form would be to generate a bigram model based on the sample texts and predict words given the bigrams.
+
+```{r}
+
+
+sampleBiGrams <- getNGrams(sample,2)
+
+
+firstword <- function(s){
+  w <- strsplit(s," ")[[1]][1]
+  w
+}
+
+secondword <- function(s){
+  w <- strsplit(s," ")[[1]][2]
+  w
+}
+
+
+sampleBiGrams$word1<- sapply(sampleBiGrams$ngram,firstword)
+sampleBiGrams$word2<- sapply(sampleBiGrams$ngram,secondword)
+
+bipredict <- function(my_word){
+  la <- filter(sampleBiGrams,word1==tolower(my_word))
+  la <- arrange(la,desc(total))
+  head(la$word2)
+}
+
+
+
+
+```
+
+Hence, we use frequencies of the bi-grams to predict, where P(w_n 
+ w_{n-1}) = count(w_{n-1} w_n)/count(w_{n-1}). As the count of the given word is constant, we can simple select the most frequent bi-gram with the given first word.
+
+
+```{r}
+print("top predictions for \'I\':") 
+print(bipredict("I"))
+print("top predictions for \'love\':") 
+print(bipredict("love"))
+print("top predictions for \'hate\':") 
+print(bipredict("hate"))
+print("top predictions for \'am\':") 
+print(bipredict("am"))
+```
+
+
+
+## Outlook
+
+Of course, this is a very simplistic algorithm and much can be refined. I showed that there is a basis to expand the algorithm to predictions based on N-grams, with a 2-gram prediction algorithm as first toy example. To continue this quest, in the coming weeks, I will  exploe the following:
+
+- What is the effect of filtering the N-gram tables by removing rare observations? 
+- How can smoothing help to predict rare cases. To this end we can implement a simple back-off algorithm to strengthen the prediction in case of unseen word sequences. We plan to use the methods in https://www.cs.cornell.edu/courses/cs4740/2012sp/lectures/smoothing+backoff-1-4pp.pdf as a starting point. If we filter our table, such back-off algorithms will be even more important. 
+- Finally, we will also write some scripts to test and optimize the prediction algorithm, using a subset of the corpora that are not used in training.
+- We will measure different settings of the algorithm (e.g. from only 2-grams to 5-grams; with or without filtering; using large or small portions of the original corpora) based on predictive performance, memory usage and computation time. This analysis will be used to select a model for the final application.
+
+The skills we developed in the earlier phases of the Data Science Specialization will be used to implement these algorithms in an interactive Shiny app. 
+
+

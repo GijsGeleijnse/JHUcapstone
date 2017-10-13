@@ -1,0 +1,61 @@
+
+gram2_p002_nofilter 69.3499999999999 
+
+gram2_p002_nofilter 0.329999999999998 
+
+gram2_p002_nofilter 70.1600000000008 
+
+gram2_p002_nofilter NA 
+
+gram2_p002_nofilter NA 
+
+gram2_p02_nofilter 531.23 
+
+gram2_p02_nofilter 3.23 
+
+gram2_p02_nofilter 530.839999999999 
+
+gram2_p02_nofilter NA 
+
+gram2_p02_nofilter NA 
+
+gram3_p02_nofilter 1732.69 
+
+gram3_p02_nofilter 7.59 
+
+gram3_p02_nofilter 1734.81 
+
+gram3_p02_nofilter NA 
+
+gram3_p02_nofilter NA 
+
+gram3_p02_withfilter.csv 755.37 
+
+gram3_p02_withfilter.csv 5.38 
+
+gram3_p02_withfilter.csv 726.41 
+
+gram3_p02_withfilter.csv NA 
+
+gram3_p02_withfilter.csv NA 
+
+gram5_p02_withfilter.csv 1692.94 
+
+gram5_p02_withfilter.csv 8.14 
+
+gram5_p02_withfilter.csv 1607.75 
+
+gram5_p02_withfilter.csv NA 
+
+gram5_p02_withfilter.csv NA 
+
+gram5_p02_nofilter.csv 5864.55 
+
+gram5_p02_nofilter.csv 50.72 
+
+gram5_p02_nofilter.csv 5857.64 
+
+gram5_p02_nofilter.csv NA 
+
+gram5_p02_nofilter.csv NA 
+

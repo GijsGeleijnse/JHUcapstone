@@ -1,0 +1,67 @@
+
+gram2_p002_nofilter 0.47999999999999 
+
+gram2_p002_nofilter 0.00999999999999979 
+
+gram2_p002_nofilter 0.55000000000291 
+
+gram2_p002_nofilter NA 
+
+gram2_p002_nofilter NA 
+
+percentage correct: 0.0269479609473537
+gram2_p02_nofilter 1.98000000000002 
+
+gram2_p02_nofilter 0 
+
+gram2_p02_nofilter 2.01000000000931 
+
+gram2_p02_nofilter NA 
+
+gram2_p02_nofilter NA 
+
+percentage correct: 0.027206665454451
+gram3_p02_nofilter 36.46 
+
+gram3_p02_nofilter 0.43 
+
+gram3_p02_nofilter 37.7999999999884 
+
+gram3_p02_nofilter NA 
+
+gram3_p02_nofilter NA 
+
+percentage correct: 0.0312397759006363
+gram3_p02_withfilter.csv 1.89999999999998 
+
+gram3_p02_withfilter.csv 0.0300000000000011 
+
+gram3_p02_withfilter.csv 1.95000000001164 
+
+gram3_p02_withfilter.csv NA 
+
+gram3_p02_withfilter.csv NA 
+
+percentage correct: 0.0515977311191858
+gram5_p02_withfilter.csv 7.20999999999998 
+
+gram5_p02_withfilter.csv 0.15 
+
+gram5_p02_withfilter.csv 7.3799999999901 
+
+gram5_p02_withfilter.csv NA 
+
+gram5_p02_withfilter.csv NA 
+
+percentage correct: 0.0528267796383328
+gram5_p02_nofilter.csv 253.78 
+
+gram5_p02_nofilter.csv 2 
+
+gram5_p02_nofilter.csv 259.160000000003 
+
+gram5_p02_nofilter.csv NA 
+
+gram5_p02_nofilter.csv NA 
+
+percentage correct: 0.0315739864603139
